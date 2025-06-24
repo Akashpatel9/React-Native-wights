@@ -69,6 +69,7 @@ export const COLORS = {
   WIDGET_BACKGROUND: '#F5F5F5',
   WIDGET_RETURNING: '#ffebee',
   GRID_BORDER: '#e0e0e0',
+  GRID_LINE: '#e0e0e0',
   GRID_OCCUPIED: '#ffcdd2',
   GRID_FREE: '#c8e6c9',
   GRID_RECENTLY_FREED: '#4caf50',
@@ -85,4 +86,5 @@ export const COLORS = {
   TEXT_PRIMARY: '#000',
   TEXT_SECONDARY: '#666',
   TEXT_MUTED: '#999',
+  ACCENT_LIGHT: 'rgba(0,123,255,0.1)',
 }; 

@@ -1,6 +1,7 @@
 import React, {useState, useRef, useEffect, useCallback} from 'react';
 import {
   View,
+  Text,
   TouchableOpacity,
   PanResponder,
   Animated,
@@ -55,11 +56,258 @@ import { logger } from './lib/logger';
 import { feedback } from './lib/feedback';
 import { useMultipleTimeouts } from './lib/hooks';
 
-// ProfileHeader component is now imported from ./components/ProfileHeader
+// Empty State Component
+const EmptyState = () => {
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const floatAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const shimmerAnim = useRef(new Animated.Value(0)).current;
 
-// WidgetContent component is now imported from ./components/WidgetContent
+  useEffect(() => {
+    // Initial entrance animation
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 100,
+        friction: 8,
+        useNativeDriver: false,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: false,
+      }),
+    ]).start();
 
-// Widget component is now imported from ./components/Widget
+    // Continuous floating animation
+    const float = () => {
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: false,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: false,
+        }),
+      ]).start(float);
+    };
+    float();
+
+    // Subtle pulse for the CTA button
+    const pulse = () => {
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 1500,
+          useNativeDriver: false,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: false,
+        }),
+      ]).start(pulse);
+    };
+    pulse();
+
+    // Shimmer effect
+    const shimmer = () => {
+      Animated.timing(shimmerAnim, {
+        toValue: 1,
+        duration: 2000,
+        useNativeDriver: false,
+      }).start(() => {
+        shimmerAnim.setValue(0);
+        shimmer();
+      });
+    };
+    shimmer();
+  }, [scaleAnim, opacityAnim, floatAnim, pulseAnim, shimmerAnim]);
+
+  return (
+    <Animated.View style={{
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 30,
+      transform: [
+        { scale: scaleAnim },
+        { translateY: floatAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, -8]
+        })}
+      ],
+      opacity: opacityAnim,
+    }}>
+      {/* Background gradient effect */}
+      <View style={{
+        position: 'absolute',
+        width: 300,
+        height: 300,
+        borderRadius: 150,
+        backgroundColor: COLORS.ACCENT_LIGHT,
+        opacity: 0.3,
+      }} />
+      
+      {/* Main card */}
+      <View style={{
+        backgroundColor: '#FFFFFF',
+        borderRadius: 24,
+        padding: 35,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.15,
+        shadowRadius: 20,
+        elevation: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(0,123,255,0.1)',
+        maxWidth: 340,
+        width: '100%',
+      }}>
+        {/* Animated icon */}
+        <Animated.View style={{
+          marginBottom: 20,
+          transform: [{ scale: pulseAnim }]
+        }}>
+          <View style={{
+            width: 80,
+            height: 80,
+            borderRadius: 40,
+            backgroundColor: 'rgba(0,123,255,0.1)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: 10,
+          }}>
+            <Text style={{ fontSize: 36 }}>🎯</Text>
+          </View>
+        </Animated.View>
+
+        <Text style={{
+          fontSize: 28,
+          fontWeight: '700',
+          color: COLORS.TEXT_PRIMARY,
+          marginBottom: 12,
+          textAlign: 'center',
+          letterSpacing: -0.5,
+        }}>
+          Welcome to Your Profile!
+        </Text>
+        
+        <Text style={{
+          fontSize: 16,
+          color: COLORS.TEXT_SECONDARY,
+          textAlign: 'center',
+          lineHeight: 24,
+          marginBottom: 30,
+          fontWeight: '400',
+        }}>
+          Transform your profile into a personalized dashboard with interactive widgets
+        </Text>
+        
+        {/* CTA Button with shimmer */}
+        <Animated.View style={{
+          backgroundColor: COLORS.PRIMARY,
+          paddingHorizontal: 24,
+          paddingVertical: 16,
+          borderRadius: 16,
+          marginBottom: 25,
+          transform: [{ scale: pulseAnim }],
+          shadowColor: COLORS.PRIMARY,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          elevation: 6,
+          overflow: 'hidden',
+        }}>
+          {/* Shimmer overlay */}
+          <Animated.View style={{
+            position: 'absolute',
+            top: 0,
+            left: shimmerAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [-100, 300]
+            }),
+            width: 100,
+            height: '100%',
+            backgroundColor: 'rgba(255,255,255,0.3)',
+            transform: [{ skewX: '-20deg' }],
+          }} />
+          
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={{ fontSize: 18, marginRight: 8 }}>✨</Text>
+            <Text style={{
+              fontSize: 16,
+              color: '#FFFFFF',
+              textAlign: 'center',
+              fontWeight: '600',
+            }}>
+              Tap the + button to get started
+            </Text>
+          </View>
+        </Animated.View>
+        
+        {/* Widget preview cards */}
+        <View style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          width: '100%',
+          marginBottom: 20,
+        }}>
+          {[
+            { emoji: '👤', name: 'Profile', color: '#FF6B6B' },
+            { emoji: '📊', name: 'Stats', color: '#4ECDC4' },
+            { emoji: '📱', name: 'Activity', color: '#45B7D1' },
+          ].map((widget, index) => (
+            <Animated.View
+              key={widget.name}
+        style={{
+                backgroundColor: widget.color + '15',
+                borderRadius: 12,
+                padding: 12,
+          alignItems: 'center',
+                flex: 1,
+                marginHorizontal: 4,
+                borderWidth: 1,
+                borderColor: widget.color + '30',
+                transform: [{
+                  translateY: floatAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, index % 2 === 0 ? -4 : 4]
+                  })
+                }]
+              }}
+            >
+              <Text style={{ fontSize: 20, marginBottom: 4 }}>{widget.emoji}</Text>
+              <Text style={{
+                fontSize: 11,
+                color: widget.color,
+                fontWeight: '600',
+                textAlign: 'center',
+              }}>
+                {widget.name}
+              </Text>
+            </Animated.View>
+          ))}
+        </View>
+        
+        <Text style={{
+          fontSize: 13,
+          color: COLORS.TEXT_MUTED,
+          textAlign: 'center',
+          lineHeight: 18,
+          fontStyle: 'italic',
+        }}>
+          Drag, drop, and customize to make it yours
+        </Text>
+      </View>
+    </Animated.View>
+  );
+};
 
 export default function ProfileWidgetResizable() {
   const [widgets, setWidgets] = useState([]);
@@ -420,7 +668,7 @@ export default function ProfileWidgetResizable() {
               
               return currentWidgets; // Don't modify widgets for invalid move
             }
-                } else {
+      } else {
             // Same position - reset immediately and animate scale/elevation back to normal
             if (pan) {
               pan.flattenOffset();
@@ -592,7 +840,7 @@ export default function ProfileWidgetResizable() {
             setHintBox(null);
             setReturningId(null);
             timeouts.clearAll(); // Clear all timeouts when exiting edit mode
-          } else {
+                    } else {
             logger.debug('Entering edit mode');
             setEditMode(true);
             setShowOptionsMenu(false); // Close options menu when entering edit mode
@@ -611,17 +859,24 @@ export default function ProfileWidgetResizable() {
             position: 'relative',
             width: screenWidth,
           }}>
-            {/* Grid visualization in edit mode */}
-            <GridVisualization 
-              editMode={editMode}
-              widgets={widgets}
-              recentlyFreed={recentlyFreed}
-              GRID_ROWS={GRID_ROWS}
-              GRID_COLUMNS={GRID_COLUMNS}
-              ACTUAL_CELL_WIDTH={ACTUAL_CELL_WIDTH}
-              ACTUAL_CELL_HEIGHT={ACTUAL_CELL_HEIGHT}
-              TILE_GAP={TILE_GAP}
-            />
+            {/* Empty state when no widgets */}
+            {widgets.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <>
+                {/* Grid visualization in edit mode */}
+                <GridVisualization 
+                  editMode={editMode}
+                  widgets={widgets}
+                  recentlyFreed={recentlyFreed}
+                  GRID_ROWS={GRID_ROWS}
+                  GRID_COLUMNS={GRID_COLUMNS}
+                  ACTUAL_CELL_WIDTH={ACTUAL_CELL_WIDTH}
+                  ACTUAL_CELL_HEIGHT={ACTUAL_CELL_HEIGHT}
+                  TILE_GAP={TILE_GAP}
+                />
+              </>
+            )}
 
             {/* Hint box for drag preview */}
             <HintBox 
