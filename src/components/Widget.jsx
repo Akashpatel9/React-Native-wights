@@ -1,10 +1,16 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import WidgetContent from './WidgetContent';
 import { COLORS, DRAG_SCALE, DRAG_OPACITY, Z_INDEX, ACCESSIBILITY } from '../lib/constants';
 import { formatWidgetType } from '../lib/widgetUtils';
 
 const Widget = ({ widget, editMode, onRemove, isDragging, isReturning, pan, animations, ACTUAL_CELL_WIDTH, ACTUAL_CELL_HEIGHT, TILE_GAP }) => {
+  const handleRemove = () => {
+    if (onRemove && widget.id) {
+      onRemove(widget.id);
+    }
+  };
+
   return (
     <View
       accessible={true}
@@ -38,11 +44,13 @@ const Widget = ({ widget, editMode, onRemove, isDragging, isReturning, pan, anim
       )}
 
       {editMode && onRemove && !isDragging && (
-        <View 
+        <TouchableOpacity
           accessible={true}
           accessibilityRole="button"
           accessibilityLabel={`Remove ${formatWidgetType(widget.type)} widget`}
           accessibilityHint={ACCESSIBILITY.REMOVE_BUTTON_HINT}
+          onPress={handleRemove}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           style={{
             position: 'absolute',
             top: 4,
@@ -54,11 +62,15 @@ const Widget = ({ widget, editMode, onRemove, isDragging, isReturning, pan, anim
             justifyContent: 'center',
             alignItems: 'center',
             zIndex: Z_INDEX.REMOVE_BUTTON,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 3,
+            elevation: 5,
           }}
-          onTouchEnd={() => onRemove(widget.id)}
         >
           <Text style={{ fontSize: 12, color: 'white', fontWeight: 'bold' }}>×</Text>
-        </View>
+        </TouchableOpacity>
       )}
     </View>
   );

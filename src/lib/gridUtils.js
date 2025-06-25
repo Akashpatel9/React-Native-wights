@@ -107,3 +107,52 @@ export const isCellOccupied = (gridX, gridY, widgets) => {
     gridY < widget.gridY + widget.height,
   );
 };
+
+/**
+ * Check if there's any free space in the grid for any widget size
+ * @param {Array} widgets - Array of existing widgets
+ * @param {number} GRID_COLUMNS - Total grid columns
+ * @param {number} GRID_ROWS - Total grid rows
+ * @returns {boolean} - True if there's any free space
+ */
+export const hasAnyFreeSpace = (widgets, GRID_COLUMNS, GRID_ROWS) => {
+  // Check if there's at least one free 1x1 cell
+  return findFreeCell(1, 1, widgets, null, GRID_COLUMNS, GRID_ROWS) !== null;
+};
+
+/**
+ * Get all available widget sizes that can fit in the current grid
+ * @param {Array} widgets - Array of existing widgets
+ * @param {Array} allSizes - Array of all possible widget sizes (from WIDGET_SIZES)
+ * @param {number} GRID_COLUMNS - Total grid columns
+ * @param {number} GRID_ROWS - Total grid rows
+ * @returns {Array} - Array of sizes that can fit
+ */
+export const getAvailableWidgetSizes = (widgets, allSizes, GRID_COLUMNS, GRID_ROWS) => {
+  return allSizes.filter(size => {
+    return findFreeCell(size.width, size.height, widgets, null, GRID_COLUMNS, GRID_ROWS) !== null;
+  });
+};
+
+/**
+ * Analyze grid space and return detailed information
+ * @param {Array} widgets - Array of existing widgets
+ * @param {Array} allSizes - Array of all possible widget sizes
+ * @param {number} GRID_COLUMNS - Total grid columns
+ * @param {number} GRID_ROWS - Total grid rows
+ * @returns {Object} - Space analysis information
+ */
+export const analyzeGridSpace = (widgets, allSizes, GRID_COLUMNS, GRID_ROWS) => {
+  const occupancyPercentage = calculateOccupancyPercentage(widgets, GRID_COLUMNS, GRID_ROWS);
+  const hasAnySpace = hasAnyFreeSpace(widgets, GRID_COLUMNS, GRID_ROWS);
+  const availableSizes = getAvailableWidgetSizes(widgets, allSizes, GRID_COLUMNS, GRID_ROWS);
+  
+  return {
+    occupancyPercentage,
+    hasAnySpace,
+    availableSizes,
+    totalCells: GRID_COLUMNS * GRID_ROWS,
+    occupiedCells: calculateOccupiedCells(widgets),
+    freeCells: (GRID_COLUMNS * GRID_ROWS) - calculateOccupiedCells(widgets)
+  };
+};

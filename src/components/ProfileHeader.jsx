@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 
-const OptionsDropdown = ({ onAddWidget, onEditPress, onToggleMenu }) => {
+const OptionsDropdown = ({ onAddWidget, onEditPress, onToggleMenu, onResetWidgets }) => {
   return (
     <View style={{
       position: 'absolute',
@@ -14,7 +14,7 @@ const OptionsDropdown = ({ onAddWidget, onEditPress, onToggleMenu }) => {
       shadowOpacity: 0.25,
       shadowRadius: 4,
       elevation: 5,
-      minWidth: 90,
+      minWidth: 120,
       zIndex: 1000,
     }}>
       <TouchableOpacity 
@@ -23,14 +23,14 @@ const OptionsDropdown = ({ onAddWidget, onEditPress, onToggleMenu }) => {
           onToggleMenu();
         }}
         style={{
-          paddingVertical: 6,
+          paddingVertical: 8,
           paddingHorizontal: 16,
           borderBottomWidth: 1,
           borderBottomColor: '#f0f0f0',
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-        <Text style={{ fontSize: 14, fontWeight: '600', color: '#007AFF' }}>+ Add</Text>
+        <Text style={{ fontSize: 12, fontWeight: '600', color: '#007AFF' }}>Add Widget</Text>
       </TouchableOpacity>
       
       <TouchableOpacity 
@@ -39,18 +39,34 @@ const OptionsDropdown = ({ onAddWidget, onEditPress, onToggleMenu }) => {
           onToggleMenu();
         }}
         style={{
-          paddingVertical: 6,
+          paddingVertical: 8,
+          paddingHorizontal: 16,
+          borderBottomWidth: 1,
+          borderBottomColor: '#f0f0f0',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+        <Text style={{ fontSize: 12, fontWeight: '600', color: '#007AFF' }}>Edit Mode</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity 
+        onPress={() => {
+          onResetWidgets();
+          onToggleMenu();
+        }}
+        style={{
+          paddingVertical: 8,
           paddingHorizontal: 16,
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-        <Text style={{ fontSize: 14, fontWeight: '600', color: '#007AFF' }}>✎ Edit</Text>
+        <Text style={{ fontSize: 12, fontWeight: '600', color: '#FF3B30' }}>Remove All</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
-const ProfileHeader = ({ onEditPress, onAddWidget, editMode, showOptionsMenu, onToggleMenu }) => {
+const ProfileHeader = ({ onEditPress, onAddWidget, editMode, showOptionsMenu, onToggleMenu, onResetWidgets }) => {
   return (
     <View style={{
       position: 'absolute',
@@ -119,6 +135,7 @@ const ProfileHeader = ({ onEditPress, onAddWidget, editMode, showOptionsMenu, on
                   onAddWidget={onAddWidget}
                   onEditPress={onEditPress}
                   onToggleMenu={onToggleMenu}
+                  onResetWidgets={onResetWidgets}
                 />
               )}
             </>

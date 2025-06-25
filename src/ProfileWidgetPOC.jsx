@@ -34,6 +34,7 @@ import {
   findFreeCell,
   calculateOccupancyPercentage,
   getWidgetCells,
+  analyzeGridSpace,
 } from './lib/gridUtils';
 
 import {
@@ -43,6 +44,7 @@ import {
   removeWidgetById,
   updateWidgetPosition,
   WIDGET_TYPES,
+  WIDGET_SIZES,
 } from './lib/widgetUtils';
 
 import {
@@ -348,7 +350,10 @@ export default function ProfileWidgetResizable() {
     
     if (!freeCell) {
       logger.warn(`No free space found for ${type} ${w}x${h}`);
-      feedback.widget.noSpace(type, `${w}×${h}`);
+      
+      // Analyze grid space for detailed feedback
+      const spaceInfo = analyzeGridSpace(widgets, WIDGET_SIZES, GRID_COLUMNS, GRID_ROWS);
+      feedback.widget.noSpace(type, `${w}×${h}`, spaceInfo);
       return;
     }
     
@@ -448,6 +453,71 @@ export default function ProfileWidgetResizable() {
     setHintBox(null);
     }
   }, [widgets, draggingId, returningId, timeouts]);
+
+  const resetAllWidgets = useCallback(() => {
+    const widgetCount = widgets.length;
+    
+    feedback.widget.confirmReset(widgetCount, () => {
+      logger.debug(`Resetting all ${widgetCount} widgets`);
+      
+      if (widgetCount === 0) {
+        return; // Nothing to reset
+      }
+
+      // Animate all widgets out simultaneously
+      const animationPromises = widgets.map(widget => {
+        const animations = animationRefs.current[widget.id];
+        
+        if (animations) {
+          return new Promise(resolve => {
+            Animated.parallel([
+              Animated.spring(animations.scale, {
+                toValue: 0,
+                tension: 200,
+                friction: 10,
+                useNativeDriver: false,
+              }),
+              Animated.timing(animations.opacity, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: false,
+              }),
+              Animated.timing(animations.rotation, {
+                toValue: 360, // Full spin
+                duration: 300,
+                useNativeDriver: false,
+              }),
+            ]).start(() => resolve());
+          });
+        } else {
+          return Promise.resolve();
+        }
+      });
+
+      // Wait for all animations to complete, then clear everything
+      Promise.all(animationPromises).then(() => {
+        // Clear all widgets
+        setWidgets([]);
+        
+        // Clear all states
+        setDraggingId(null);
+        draggingIdRef.current = null;
+        setReturningId(null);
+        setHintBox(null);
+        setRecentlyFreed([]);
+        
+        // Clear all animation refs and pan responders
+        animationRefs.current = {};
+        panRefs.current = {};
+        panResponders.current = {};
+        
+        // Clear any pending timeouts
+        timeouts.clearAll();
+        
+        logger.debug('All widgets reset successfully');
+      });
+    });
+  }, [widgets, timeouts]);
 
   // Create pan responder for each widget - using refs to avoid stale closures
   const createPanResponder = useCallback((widgetId) => {
@@ -846,10 +916,22 @@ export default function ProfileWidgetResizable() {
             setShowOptionsMenu(false); // Close options menu when entering edit mode
           }
         }, [editMode, timeouts])}
-        onAddWidget={useCallback(() => setModalVisible(true), [])}
+        onAddWidget={useCallback(() => {
+          // Check if there's any space available before opening modal
+          const spaceInfo = analyzeGridSpace(widgets, WIDGET_SIZES, GRID_COLUMNS, GRID_ROWS);
+          
+          if (!spaceInfo.hasAnySpace) {
+            // No space at all - show warning instead of opening modal
+            feedback.widget.noSpace('any', 'any size', spaceInfo);
+            return;
+          }
+          
+          setModalVisible(true);
+        }, [widgets])}
         editMode={editMode}
         showOptionsMenu={showOptionsMenu}
         onToggleMenu={useCallback(() => setShowOptionsMenu(!showOptionsMenu), [showOptionsMenu])}
+        onResetWidgets={resetAllWidgets}
       />
 
       <View style={{flex: 1, marginTop: 40, paddingHorizontal:10}}>
