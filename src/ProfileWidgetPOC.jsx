@@ -181,8 +181,8 @@ const EmptyState = () => {
             height: 80,
             borderRadius: 40,
             backgroundColor: 'rgba(0,123,255,0.1)',
-            justifyContent: 'center',
-            alignItems: 'center',
+        justifyContent: 'center',
+        alignItems: 'center',
             marginBottom: 10,
           }}>
             <Text style={{ fontSize: 36 }}>🎯</Text>
@@ -228,7 +228,7 @@ const EmptyState = () => {
         }}>
           {/* Shimmer overlay */}
           <Animated.View style={{
-            position: 'absolute',
+          position: 'absolute',
             top: 0,
             left: shimmerAnim.interpolate({
               inputRange: [0, 1],
@@ -419,7 +419,7 @@ export default function ProfileWidgetResizable() {
         
       // Mark the freed cells
         const freedCells = getWidgetCells(widgetToRemove);
-        setRecentlyFreed(freedCells);
+      setRecentlyFreed(freedCells);
         timeouts.setTimeout('clearFreedCells', () => setRecentlyFreed([]), FREED_CELLS_DURATION);
         
         // Clear any active states for this widget
@@ -434,7 +434,7 @@ export default function ProfileWidgetResizable() {
         
         // Clean up animation refs
         delete animationRefs.current[id];
-        delete panRefs.current[id];
+      delete panRefs.current[id];
         delete panResponders.current[id];
       });
     } else {
@@ -614,7 +614,7 @@ export default function ProfileWidgetResizable() {
             if (newGridX !== currentWidget.gridX || newGridY !== currentWidget.gridY) {
               const isValid = isCellFree(newGridX, newGridY, currentWidget.width, currentWidget.height, currentWidgets, currentWidget.id, GRID_COLUMNS, GRID_ROWS);
               setHintBox(createHintBox(newGridX, newGridY, currentWidget.width, currentWidget.height, isValid));
-            } else {
+    } else {
               setHintBox(null);
             }
 
@@ -692,7 +692,7 @@ export default function ProfileWidgetResizable() {
               }
               
               return updateWidgetPosition(currentWidgets, currentWidget.id, newGridX, newGridY);
-            } else {
+      } else {
               // Invalid drop - animate return to original position
               logger.widget.drag(currentWidget.id, 'INVALID_MOVE', { from: { x: currentWidget.gridX, y: currentWidget.gridY }, to: { x: newGridX, y: newGridY } });
               setReturningId(currentWidget.id);
@@ -737,8 +737,8 @@ export default function ProfileWidgetResizable() {
               }
               
               return currentWidgets; // Don't modify widgets for invalid move
-            }
-      } else {
+      }
+    } else {
             // Same position - reset immediately and animate scale/elevation back to normal
             if (pan) {
               pan.flattenOffset();
@@ -751,7 +751,7 @@ export default function ProfileWidgetResizable() {
                   toValue: 1,
                   tension: 150,
                   friction: 7,
-                  useNativeDriver: false,
+            useNativeDriver: false,
                 }),
                 Animated.timing(animations.elevation, {
                   toValue: 2,
@@ -774,8 +774,8 @@ export default function ProfileWidgetResizable() {
         setDraggingId(null);
         draggingIdRef.current = null;
       setHintBox(null);
-      },
-                onPanResponderTerminate: () => {
+          },
+          onPanResponderTerminate: () => {
         logger.widget.drag(widgetId, 'TERMINATE', {});
         const pan = panRefs.current[widgetId];
         const animations = animationRefs.current[widgetId];
@@ -811,11 +811,11 @@ export default function ProfileWidgetResizable() {
           });
         }
         
-        setDraggingId(null);
+            setDraggingId(null);
         draggingIdRef.current = null;
-        setHintBox(null);
-      },
-    });
+            setHintBox(null);
+          },
+        });
   }, [timeouts]); // Only timeouts as dependency to avoid stale closures
 
   // Add panResponders ref back
