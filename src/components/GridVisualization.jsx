@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import { SCREEN_WIDTH, COLORS, Z_INDEX } from '../lib/constants';
+import { COLORS, Z_INDEX } from '../lib/constants';
 import { isCellOccupied } from '../lib/gridUtils';
 
 const GridVisualization = ({ 
@@ -17,14 +17,14 @@ const GridVisualization = ({
 
   if (!editMode) return null;
 
-  return (
+    return (
     <View style={{
       position: 'absolute',
       top: 0,
       left: 0,
-      width: SCREEN_WIDTH,
+      width: GRID_COLUMNS * (ACTUAL_CELL_WIDTH + TILE_GAP) + TILE_GAP,
       height: GRID_ROWS * (ACTUAL_CELL_HEIGHT + TILE_GAP) + TILE_GAP,
-              zIndex: Z_INDEX.GRID,
+      zIndex: Z_INDEX.GRID,
     }}>
       {Array.from({length: GRID_ROWS}, (_, row) =>
         Array.from({length: GRID_COLUMNS}, (_, col) => {

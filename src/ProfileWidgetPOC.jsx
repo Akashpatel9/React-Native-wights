@@ -14,15 +14,13 @@ import Widget from './components/Widget';
 import GridVisualization from './components/GridVisualization';
 import HintBox from './components/HintBox';
 import WidgetModal from './components/WidgetModal';
+import Widget3DPreview from './components/Widget3DPreview';
 
 // Import utilities and constants
 import {
   GRID_COLUMNS,
   GRID_ROWS,
   TILE_GAP,
-  SCREEN_WIDTH as screenWidth,
-  ACTUAL_CELL_WIDTH,
-  ACTUAL_CELL_HEIGHT,
   DRAG_THRESHOLD,
   FREED_CELLS_DURATION,
   COLORS,
@@ -56,7 +54,7 @@ import {
 
 import { logger } from './lib/logger';
 import { feedback } from './lib/feedback';
-import { useMultipleTimeouts } from './lib/hooks';
+import { useMultipleTimeouts, useResponsiveGrid } from './lib/hooks';
 
 // Empty State Component
 const EmptyState = () => {
@@ -322,6 +320,30 @@ export default function ProfileWidgetResizable() {
   const [returningId, setReturningId] = useState(null);
   const [recentlyFreed, setRecentlyFreed] = useState([]);
   
+  // 3D Touch preview state
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewWidget, setPreviewWidget] = useState(null);
+  const [previewPosition, setPreviewPosition] = useState(null);
+  const [previewSize, setPreviewSize] = useState(null);
+  
+  // Get responsive dimensions
+  const gridMetrics = useResponsiveGrid();
+  
+  // Extract dimensions for easier access
+  const {
+    screenWidth,
+    screenHeight,
+    topPadding,
+    bottomPadding,
+    actualCellWidth: ACTUAL_CELL_WIDTH,
+    actualCellHeight: ACTUAL_CELL_HEIGHT,
+    totalGridWidth,
+    totalGridHeight,
+    horizontalOffset,
+    verticalOffset,
+    isLandscape,
+  } = gridMetrics;
+  
   // Refs for pan responders and animation values
   const panRefs = useRef({});
 
@@ -343,6 +365,39 @@ export default function ProfileWidgetResizable() {
 
   // Calculate total occupied cells for better empty state logic
   const occupancyPercentage = calculateOccupancyPercentage(widgets, GRID_COLUMNS, GRID_ROWS);
+
+  // Handle 3D Touch preview
+  const handleWidgetLongPress = useCallback((widget, position, size) => {
+    // Only allow in normal mode (not edit mode)
+    if (!editMode) {
+      logger.debug(`3D Touch preview for widget ${widget.id}`);
+      
+      // Add haptic feedback for better UX (will work on supported devices)
+      try {
+        // This will provide haptic feedback on iOS devices that support it
+        if (typeof global.HapticFeedback !== 'undefined') {
+          global.HapticFeedback.trigger('impactLight');
+        }
+      } catch (error) {
+        // Haptic feedback not supported, continue without it
+      }
+      
+      setPreviewWidget(widget);
+      setPreviewPosition(position);
+      setPreviewSize(size);
+      setPreviewVisible(true);
+    }
+  }, [editMode]);
+
+  const closePreview = useCallback(() => {
+    setPreviewVisible(false);
+    // Clear preview data after animation completes
+    setTimeout(() => {
+      setPreviewWidget(null);
+      setPreviewPosition(null);
+      setPreviewSize(null);
+    }, 200);
+  }, []);
 
   const addWidget = useCallback((type, w, h) => {
     logger.widget.add(type, { width: w, height: h }, { x: '?', y: '?' });
@@ -934,12 +989,18 @@ export default function ProfileWidgetResizable() {
         onResetWidgets={resetAllWidgets}
       />
 
-      <View style={{flex: 1, marginTop: 40, paddingHorizontal:10}}>
-        <View style={{ flex: 1 }}>
+      <View style={{flex: 1, marginTop: topPadding}}>
+        <View style={{ 
+          flex: 1,
+          justifyContent: 'flex-start',
+          alignItems: 'center',
+        }}>
           <View style={{
-            flex: 1,
             position: 'relative',
-            width: screenWidth,
+            width: totalGridWidth,
+            height: totalGridHeight,
+            maxWidth: screenWidth,
+            maxHeight: screenHeight - topPadding - bottomPadding,
           }}>
             {/* Empty state when no widgets */}
             {widgets.length === 0 ? (
@@ -999,6 +1060,12 @@ export default function ProfileWidgetResizable() {
 
               const staticLeft = widget.gridX * (ACTUAL_CELL_WIDTH + TILE_GAP) + TILE_GAP;
               const staticTop = widget.gridY * (ACTUAL_CELL_HEIGHT + TILE_GAP) + TILE_GAP;
+              const widgetWidth = ACTUAL_CELL_WIDTH * widget.width + (widget.width - 1) * TILE_GAP;
+              const widgetHeight = ACTUAL_CELL_HEIGHT * widget.height + (widget.height - 1) * TILE_GAP;
+
+              // Calculate widget position and size for 3D preview
+              const widgetPosition = { x: staticLeft, y: staticTop };
+              const widgetSize = { width: widgetWidth, height: widgetHeight };
 
               return (
                 <Animated.View 
@@ -1008,8 +1075,8 @@ export default function ProfileWidgetResizable() {
                     position: 'absolute',
                     left: staticLeft,
                     top: staticTop,
-                    width: ACTUAL_CELL_WIDTH * widget.width + (widget.width - 1) * TILE_GAP,
-                    height: ACTUAL_CELL_HEIGHT * widget.height + (widget.height - 1) * TILE_GAP,
+                    width: widgetWidth,
+                    height: widgetHeight,
                     zIndex: draggingId === widget.id ? Z_INDEX.DRAGGING_WIDGET : Z_INDEX.WIDGET,
                     transform: [
                       { translateX: pan.x },
@@ -1035,17 +1102,20 @@ export default function ProfileWidgetResizable() {
                   }}
                 >
                   <Widget
-                  widget={widget}
+                    widget={widget}
                     editMode={editMode}
-                  onRemove={removeWidget}
-                  isDragging={draggingId === widget.id}
-                  isReturning={returningId === widget.id}
+                    onRemove={removeWidget}
+                    isDragging={draggingId === widget.id}
+                    isReturning={returningId === widget.id}
                     pan={pan}
                     animations={animations}
                     ACTUAL_CELL_WIDTH={ACTUAL_CELL_WIDTH}
                     ACTUAL_CELL_HEIGHT={ACTUAL_CELL_HEIGHT}
                     TILE_GAP={TILE_GAP}
-                />
+                    onLongPress={handleWidgetLongPress}
+                    widgetPosition={widgetPosition}
+                    widgetSize={widgetSize}
+                  />
                 </Animated.View>
               );
             })}
@@ -1065,6 +1135,18 @@ export default function ProfileWidgetResizable() {
           />
                 </View>
               </View>
+
+      {/* 3D Touch Preview Modal */}
+      <Widget3DPreview
+        visible={previewVisible}
+        widget={previewWidget}
+        originalPosition={previewPosition}
+        originalSize={previewSize}
+        ACTUAL_CELL_WIDTH={ACTUAL_CELL_WIDTH}
+        ACTUAL_CELL_HEIGHT={ACTUAL_CELL_HEIGHT}
+        TILE_GAP={TILE_GAP}
+        onClose={closePreview}
+      />
     </SafeAreaView>
   );
 }

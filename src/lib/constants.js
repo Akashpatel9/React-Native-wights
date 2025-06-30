@@ -3,30 +3,82 @@
  */
 import { Dimensions } from 'react-native';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-
-// Grid configuration
+// Grid configuration - these remain constant
 export const GRID_COLUMNS = 3;
 export const GRID_ROWS = 6;
 export const TILE_GAP = 4;
-export const TOP_PADDING = 90;
-export const BOTTOM_PADDING = 30;
 
-// Screen dimensions
-export const SCREEN_WIDTH = screenWidth;
-export const SCREEN_HEIGHT = screenHeight;
+// Responsive padding as percentage of screen height for better scaling
+export const TOP_PADDING_RATIO = 0.08; // 8% of screen height
+export const BOTTOM_PADDING_RATIO = 0.04; // 4% of screen height
+export const MIN_TOP_PADDING = 60; // Minimum padding for very small screens
+export const MIN_BOTTOM_PADDING = 20; // Minimum padding for very small screens
 
-// Calculate available space to fit exactly to screen
-export const AVAILABLE_HEIGHT = screenHeight - TOP_PADDING - BOTTOM_PADDING;
-export const AVAILABLE_WIDTH = screenWidth - (GRID_COLUMNS + 1) * TILE_GAP;
+// Function to get current screen dimensions
+export const getScreenDimensions = () => {
+  const { width, height } = Dimensions.get('window');
+  return { width, height };
+};
 
-// Calculate cell dimensions to fit exactly within screen
-export const CELL_WIDTH = AVAILABLE_WIDTH / GRID_COLUMNS;
-export const CELL_HEIGHT = (AVAILABLE_HEIGHT - (GRID_ROWS + 1) * TILE_GAP) / GRID_ROWS;
+// Safety constraints for grid dimensions
+export const MIN_CELL_WIDTH = 60;  // Minimum cell width for usability
+export const MIN_CELL_HEIGHT = 60; // Minimum cell height for usability
+export const MAX_CELL_WIDTH = 200; // Maximum cell width to prevent oversized widgets
+export const MAX_CELL_HEIGHT = 150; // Maximum cell height to prevent oversized widgets
 
-// Use calculated dimensions directly for perfect fit
-export const ACTUAL_CELL_WIDTH = CELL_WIDTH;
-export const ACTUAL_CELL_HEIGHT = CELL_HEIGHT;
+// Function to calculate responsive grid dimensions
+export const calculateGridDimensions = (screenWidth, screenHeight) => {
+  // Calculate responsive padding
+  const topPadding = Math.max(screenHeight * TOP_PADDING_RATIO, MIN_TOP_PADDING);
+  const bottomPadding = Math.max(screenHeight * BOTTOM_PADDING_RATIO, MIN_BOTTOM_PADDING);
+  
+  // Calculate available space
+  const availableHeight = screenHeight - topPadding - bottomPadding;
+  const availableWidth = screenWidth - (GRID_COLUMNS + 1) * TILE_GAP;
+  
+  // Calculate cell dimensions to fit exactly within screen
+  let cellWidth = availableWidth / GRID_COLUMNS;
+  let cellHeight = (availableHeight - (GRID_ROWS + 1) * TILE_GAP) / GRID_ROWS;
+  
+  // Apply safety constraints to prevent unusable cell sizes
+  cellWidth = Math.max(MIN_CELL_WIDTH, Math.min(MAX_CELL_WIDTH, cellWidth));
+  cellHeight = Math.max(MIN_CELL_HEIGHT, Math.min(MAX_CELL_HEIGHT, cellHeight));
+  
+  // Recalculate available space based on constrained cell sizes
+  const actualAvailableWidth = GRID_COLUMNS * cellWidth + (GRID_COLUMNS + 1) * TILE_GAP;
+  const actualAvailableHeight = GRID_ROWS * cellHeight + (GRID_ROWS + 1) * TILE_GAP;
+  
+  return {
+    screenWidth,
+    screenHeight,
+    topPadding,
+    bottomPadding,
+    availableHeight,
+    availableWidth,
+    actualAvailableWidth,
+    actualAvailableHeight,
+    cellWidth,
+    cellHeight,
+    actualCellWidth: cellWidth,
+    actualCellHeight: cellHeight,
+  };
+};
+
+// Get initial dimensions for backwards compatibility
+const initialDimensions = getScreenDimensions();
+const initialGridDims = calculateGridDimensions(initialDimensions.width, initialDimensions.height);
+
+// Export initial values for backwards compatibility
+export const SCREEN_WIDTH = initialDimensions.width;
+export const SCREEN_HEIGHT = initialDimensions.height;
+export const TOP_PADDING = initialGridDims.topPadding;
+export const BOTTOM_PADDING = initialGridDims.bottomPadding;
+export const AVAILABLE_HEIGHT = initialGridDims.availableHeight;
+export const AVAILABLE_WIDTH = initialGridDims.availableWidth;
+export const CELL_WIDTH = initialGridDims.cellWidth;
+export const CELL_HEIGHT = initialGridDims.cellHeight;
+export const ACTUAL_CELL_WIDTH = initialGridDims.actualCellWidth;
+export const ACTUAL_CELL_HEIGHT = initialGridDims.actualCellHeight;
 
 // Drag thresholds
 export const DRAG_THRESHOLD = 3;

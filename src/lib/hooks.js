@@ -1,7 +1,9 @@
 /**
  * Custom hooks for better state management and cleanup
  */
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
+import { Dimensions } from 'react-native';
+import { calculateGridDimensions, GRID_COLUMNS, GRID_ROWS, TILE_GAP } from './constants';
 
 /**
  * Hook to safely use setTimeout with automatic cleanup
@@ -110,4 +112,53 @@ export const usePrevious = (value) => {
     ref.current = value;
   });
   return ref.current;
+};
+
+/**
+ * Custom hook for responsive grid dimensions
+ * Provides better handling of dimension changes and ensures grid stays responsive
+ */
+export const useResponsiveGrid = () => {
+  const [dimensions, setDimensions] = useState(() => {
+    const { width, height } = Dimensions.get('window');
+    return calculateGridDimensions(width, height);
+  });
+
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions(calculateGridDimensions(window.width, window.height));
+    });
+
+    return () => subscription?.remove();
+  }, []);
+
+  // Memoized calculation to avoid unnecessary re-renders
+  const gridMetrics = useCallback(() => {
+    const {
+      actualCellWidth,
+      actualCellHeight,
+      screenWidth,
+      screenHeight,
+    } = dimensions;
+
+    // Calculate total grid size for centering
+    const totalGridWidth = GRID_COLUMNS * actualCellWidth + (GRID_COLUMNS + 1) * TILE_GAP;
+    const totalGridHeight = GRID_ROWS * actualCellHeight + (GRID_ROWS + 1) * TILE_GAP;
+
+    // Calculate centering offsets if grid is smaller than screen
+    const horizontalOffset = Math.max(0, (screenWidth - totalGridWidth) / 2);
+    const verticalOffset = Math.max(0, (screenHeight - totalGridHeight) / 4); // Less vertical centering
+
+    return {
+      ...dimensions,
+      totalGridWidth,
+      totalGridHeight,
+      horizontalOffset,
+      verticalOffset,
+      isLandscape: screenWidth > screenHeight,
+      aspectRatio: screenWidth / screenHeight,
+    };
+  }, [dimensions]);
+
+  return gridMetrics();
 }; 

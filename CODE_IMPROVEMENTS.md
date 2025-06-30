@@ -90,19 +90,80 @@ accessibilityHint={ACCESSIBILITY.WIDGET_HINT}
 - ✅ **Better separation of concerns**
 - ✅ **Consistent file structure**
 
+### 8. **Responsive Grid System** 🆕
+- ✅ **Fully responsive** 6×3 grid that adapts to all screen sizes
+- ✅ **Auto-calculated dimensions** based on available screen space
+- ✅ **Dynamic recalculation** on orientation change or screen resize
+- ✅ **Safety constraints** prevent unusable cell sizes (min/max limits)
+- ✅ **Custom responsive hook** for efficient dimension management
+- ✅ **Centered grid layout** for optimal visual presentation
+- ✅ **Consistent spacing** across all device sizes
+
+**Key Features:**
+- **Always 6 rows × 3 columns** as requested
+- **Auto height/width** calculation for widgets
+- **Responsive padding** that scales with screen size
+- **Memory-efficient** dimension updates
+- **Cross-device compatibility** (phones, tablets, different orientations)
+
+**Implementation:**
+```javascript
+// Custom hook for responsive dimensions
+const gridMetrics = useResponsiveGrid();
+const { actualCellWidth, actualCellHeight } = gridMetrics;
+
+// Widgets automatically use calculated dimensions
+width: actualCellWidth * widget.width + (widget.width - 1) * TILE_GAP
+height: actualCellHeight * widget.height + (widget.height - 1) * TILE_GAP
+```
+
+### 9. **3D Touch Widget Preview** 🆕
+- ✅ **iOS-style 3D Touch** preview for widgets on long press
+- ✅ **Only in normal mode** - doesn't interfere with edit or drag modes
+- ✅ **Smooth animations** with scale, opacity, and subtle rotation effects
+- ✅ **Responsive positioning** - automatically adjusts to screen edges
+- ✅ **Haptic feedback** on supported devices for authentic feel
+- ✅ **Modal overlay** with blurred background for focus
+- ✅ **Touch-outside-to-dismiss** functionality
+
+**Key Features:**
+- **500ms long press delay** for optimal user experience
+- **1.5x zoom scale** with safety constraints for screen size
+- **Smart positioning** prevents preview from going off-screen
+- **Visual feedback** during long press (subtle scale animation)
+- **Automatic cleanup** when entering edit mode or starting drag
+- **Memory efficient** with proper timeout management
+
+**Usage:**
+```javascript
+// Simply long press any widget in normal mode
+// - Widget will show subtle scale feedback at 300ms
+// - 3D Touch preview will appear at 500ms
+// - Tap outside or release to dismiss
+```
+
 ## 📁 New File Structure
 
 ```
-src/lib/
-├── constants.js      # All app constants and configuration
-├── dragUtils.js      # Drag and drop helper functions
-├── feedback.js       # User feedback utilities
-├── gridUtils.js      # Grid calculation functions
-├── hooks.js          # Custom React hooks
-├── index.js          # Barrel exports for clean imports
-├── logger.js         # Logging utilities
-├── validation.js     # Input validation functions
-└── widgetUtils.js    # Widget management utilities
+src/
+├── components/
+│   ├── GridVisualization.jsx  # Grid overlay in edit mode
+│   ├── HintBox.jsx           # Drag preview hints
+│   ├── ProfileHeader.jsx     # Header with edit/add buttons
+│   ├── Widget.jsx            # Individual widget component
+│   ├── Widget3DPreview.jsx   # 3D Touch preview modal 🆕
+│   ├── WidgetContent.jsx     # Widget content display
+│   └── WidgetModal.jsx       # Widget selection modal
+└── lib/
+    ├── constants.js      # All app constants and configuration
+    ├── dragUtils.js      # Drag and drop helper functions
+    ├── feedback.js       # User feedback utilities
+    ├── gridUtils.js      # Grid calculation functions
+    ├── hooks.js          # Custom React hooks (includes responsive grid)
+    ├── index.js          # Barrel exports for clean imports
+    ├── logger.js         # Logging utilities
+    ├── validation.js     # Input validation functions
+    └── widgetUtils.js    # Widget management utilities
 ```
 
 ## 🔧 Technical Improvements
